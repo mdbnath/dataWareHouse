@@ -1,0 +1,1 @@
+select * from "DIM_SPONSOR_INFO"
