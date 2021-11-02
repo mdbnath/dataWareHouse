@@ -29,9 +29,11 @@ class DatabaseInterface:
             connection_string = f"dbname='{self.dbname}' user='{self.user}' host='{self.host}' password='{self.password}' port='{self.port}'"
             return pg.connect(connection_string)
 
+ 
     def drop_table(self,tableName):
         con = self.getConnection()
         cur = con.cursor()
-        cur.execute('drop table '+tableName)
+        cur.execute('drop table if exists '+tableName)
         cur.close()
         con.close()
+

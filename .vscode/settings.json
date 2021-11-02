@@ -1,5 +1,8 @@
 {
     "files.associations": {
         "haw2": "c"
+    },
+    "terminal.integrated.env.windows": {
+        "PYTHONPATH": "${workspaceFolder}"
     }
 }
