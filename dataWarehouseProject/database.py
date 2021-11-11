@@ -33,7 +33,8 @@ class DatabaseInterface:
     def drop_table(self,tableName):
         con = self.getConnection()
         cur = con.cursor()
-        cur.execute('drop table if exists '+tableName)
+        cur.execute('drop table '+tableName)
+        con.commit()
         cur.close()
         con.close()
 
