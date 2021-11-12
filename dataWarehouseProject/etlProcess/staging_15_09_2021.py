@@ -5,7 +5,7 @@ from numpy import NaN
 import pandas as pd
 import re
 from dataWarehouseProject.database import DatabaseInterface
-
+directory=sys.argv[1]
 ##### Extract Methods ########
 def extract_sources_sponsor(test_string):
     elements = [line for line in test_string.split("\n") if line.startswith('B.4.')]
@@ -29,7 +29,7 @@ def extract_sources_trial(test_string):
         term = elements[element_number + 4].split(': ')[-1]
         organ_class = elements[element_number + 5].split(': ')[-1]
         output.append((disease, version,level,classification_code,term,organ_class))
-        return
+        return;
    
 def extract_sources_trial_duration(test_string):
     elements = [line for line in test_string.split("\n") if line.startswith('E.8.9.1')]
@@ -51,7 +51,7 @@ def create_staging_summary(df):
     df=df[['uid','summary_EudraCT_Number','summary_Protocol_Number','summary_trial_type','summary_trial_status']]
     df=df.drop_duplicates()
     DatabaseInterface().drop_table('"staging_15_09_2021"."SUMMARY_INFORMATION"')
-    df.to_sql('SUMMARY_INFORMATION', DatabaseInterface().getConnection(engine = True), index = True, if_exists='append',schema='staging_15_09_2021')
+    df.to_sql('SUMMARY_INFORMATION', DatabaseInterface().getConnection(engine = True), index = True, if_exists='append',schema=directory)
     return(df)
 
 def create_staging_protocol(df):   
@@ -69,7 +69,7 @@ def create_staging_protocol(df):
     'protocol_trial_fullTitle','protocol_code_number']]
     df=df.drop_duplicates()
     DatabaseInterface().drop_table('"staging_15_09_2021"."PROTOCOL_INFORMATION"')
-    df.to_sql('PROTOCOL_INFORMATION', DatabaseInterface().getConnection(engine = True), index = True, if_exists='append',schema='staging_15_09_2021')
+    df.to_sql('PROTOCOL_INFORMATION', DatabaseInterface().getConnection(engine = True), index = True, if_exists='append',schema=directory)
     return(df)
 
 def create_staging_sponsor(df): 
@@ -89,12 +89,13 @@ def create_staging_sponsor(df):
     'sponsor_city','sponsor_postalCode','sponsor_email']]
     df=df.drop_duplicates()
     DatabaseInterface().drop_table('"staging_15_09_2021"."SPONSOR_INFORMATION"')
-    df.to_sql('SPONSOR_INFORMATION', DatabaseInterface().getConnection(engine = True), index = True, if_exists='append',schema='staging_15_09_2021')
+    df.to_sql('SPONSOR_INFORMATION', DatabaseInterface().getConnection(engine = True), index = True, if_exists='append',schema=directory)
     return(df)
 
 def create_staging_imp(df):  
     df['summary_EudraCT_Number'] = df['content'].str.extract(pat='EudraCT Number: (.*)')
     df['imp_role'] = df['content'].str.extract(pat='D.1.2 and D.1.3 IMP Role: (.*)')
+    df['uid'] = df["summary_EudraCT_Number"] + df["imp_role"]
     df['imp_marketing_authorisation'] = df['content'].str.extract(pat='D.2.1 IMP to be used in the trial has a marketing authorisation: (.*)')
     df['imp_Trade_name'] = df['content'].str.extract(pat='D.2.1.1.1 Trade name: (.*)')
     df['imp_marketing_authorisation_holder'] = df['content'].str.extract(pat='D.2.1.1.2 Name of the Marketing Authorisation holder: (.*)')
@@ -102,28 +103,31 @@ def create_staging_imp(df):
     df['imp_orphan_drug_number'] = df['content'].str.extract(pat='D.2.5.1 Orphan drug designation number: (.*)')   
     df['imp_productName'] = df['content'].str.extract(pat='D.3.1 Product name: (.*)')
     df['imp_productCode'] = df['content'].str.extract(pat='D.3.2 Product code: (.*)')
-    df['imp_pharmaceutical_form'] = df['content'].str.extract(pat='D.3.4 Pharmaceutical form: (.*)')
-    df['imp_paediatric_formulation'] = df['content'].str.extract(pat='D.3.4.1 Specific paediatric formulation: (.*)')
-    df['imp_admin_routes'] = df['content'].str.extract(pat='D.3.7 Routes of administration for this IMP: (.*)')
-    df['imp_INN'] = df['content'].str.extract(pat='D.3.8 INN - Proposed INN: (.*)')
-    df['imp_casnumber'] = df['content'].str.extract(pat='D.3.9.1 CAS number: (.*)')
-    df['imp_substance_code'] = df['content'].str.extract(pat='D.3.9.4 EV Substance Code: (.*)')
-    df['imp_concentrationType'] = df['content'].str.extract(pat='D.3.10.2 Concentration type: (.*)')
-    df['imp_concentrationNumber'] = df['content'].str.extract(pat='D.3.10.3 Concentration number: (.*)')
-    df['imp_concentrationUnit'] = df['content'].str.extract(pat='D.3.10.1 Concentration unit: (.*)')
-    df['imp_chemical_origin'] = df['content'].str.extract(pat='D.3.11.1 Active substance of chemical origin: (.*)')
-    df['imp_biotechnological_origin'] = df['content'].str.extract(pat='D.3.11.2 Active substance of biological/ biotechnological origin \(other than Advanced Therapy IMP \(ATIMP\):  (.*)')
-    df['imp_ATIMP'] = df['content'].str.extract(pat='D.3.11.3 Advanced Therapy IMP \(ATIMP\): (.*)')
-    df['imp_somatic_cell_therapy'] = df['content'].str.extract(pat='D.3.11.3.1 Somatic cell therapy medicinal product: (.*)')
-    df['imp_gene_therapy'] = df['content'].str.extract(pat='D.3.11.3.2 Gene therapy medical product: (.*)')
-    df['imp_tissue_engineered'] = df['content'].str.extract(pat='D.3.11.3.3 Tissue Engineered Product: (.*)')
-    df['imp_Combination_ATIMP'] = df['content'].str.extract(pat='D.3.11.3.4 Combination ATIMP \(i.e. one involving a medical device\): (.*)')
-    df['imp_CAT_classification'] = df['content'].str.extract(pat='D.3.11.3.5 Committee on Advanced therapies \(CAT\) has issued a classification for this product: (.*)')
-    df['imp_advanced_Therapy'] = df['content'].str.extract(pat='D.3.11.4 Combination product that includes a device, but does not involve an Advanced Therapy: (.*)')
-    df['imp_placebo_used'] = df['content'].str.extract(pat='D.8.1 Is a Placebo used in this Trial? (.*)')   
+    ##df['imp_pharmaceutical_form'] = df['content'].str.extract(pat='D.3.4 Pharmaceutical form: (.*)')
+    ##df['imp_paediatric_formulation'] = df['content'].str.extract(pat='D.3.4.1 Specific paediatric formulation: (.*)')
+    ##df['imp_admin_routes'] = df['content'].str.extract(pat='D.3.7 Routes of administration for this IMP: (.*)')
+    ##df['imp_INN'] = df['content'].str.extract(pat='D.3.8 INN - Proposed INN: (.*)')
+    ##df['imp_casnumber'] = df['content'].str.extract(pat='D.3.9.1 CAS number: (.*)')
+    ##df['imp_substance_code'] = df['content'].str.extract(pat='D.3.9.4 EV Substance Code: (.*)')
+    ##df['imp_concentrationType'] = df['content'].str.extract(pat='D.3.10.2 Concentration type: (.*)')
+    ##df['imp_concentrationNumber'] = df['content'].str.extract(pat='D.3.10.3 Concentration number: (.*)')
+    ##df['imp_concentrationUnit'] = df['content'].str.extract(pat='D.3.10.1 Concentration unit: (.*)')
+    ##df['imp_chemical_origin'] = df['content'].str.extract(pat='D.3.11.1 Active substance of chemical origin: (.*)')
+    ##df['imp_biotechnological_origin'] = df['content'].str.extract(pat='D.3.11.2 Active substance of biological/ biotechnological origin \(other than Advanced Therapy IMP \(ATIMP\):  (.*)')
+    ##df['imp_ATIMP'] = df['content'].str.extract(pat='D.3.11.3 Advanced Therapy IMP \(ATIMP\): (.*)')
+    ##df['imp_somatic_cell_therapy'] = df['content'].str.extract(pat='D.3.11.3.1 Somatic cell therapy medicinal product: (.*)')
+    ##df['imp_gene_therapy'] = df['content'].str.extract(pat='D.3.11.3.2 Gene therapy medical product: (.*)')
+    ##df['imp_tissue_engineered'] = df['content'].str.extract(pat='D.3.11.3.3 Tissue Engineered Product: (.*)')
+    ##df['imp_Combination_ATIMP'] = df['content'].str.extract(pat='D.3.11.3.4 Combination ATIMP \(i.e. one involving a medical device\): (.*)')
+    ##df['imp_CAT_classification'] = df['content'].str.extract(pat='D.3.11.3.5 Committee on Advanced therapies \(CAT\) has issued a classification for this product: (.*)')
+    ##df['imp_advanced_Therapy'] = df['content'].str.extract(pat='D.3.11.4 Combination product that includes a device, but does not involve an Advanced Therapy: (.*)')
+    ##df['imp_placebo_used'] = df['content'].str.extract(pat='D.8.1 Is a Placebo used in this Trial? (.*)')   
+    df=df[['uid','summary_EudraCT_Number','imp_role','imp_marketing_authorisation',
+    'imp_Trade_name','imp_marketing_authorisation_holder','imp_orphan_drug','imp_orphan_drug_number',
+    'imp_productName','imp_productCode']]
     df=df.drop_duplicates()    
-    DatabaseInterface().drop_table('staging_15_09_2021.IMP_IDENTIFICATION')
-    df.to_sql('IMP_IDENTIFICATION', DatabaseInterface().getConnection(engine = True), index = True, if_exists='append',schema='staging_15_09_2021')
+    DatabaseInterface().drop_table('"staging_15_09_2021"."IMP_IDENTIFICATION"')
+    df.to_sql('IMP_IDENTIFICATION', DatabaseInterface().getConnection(engine = True), index = True, if_exists='append',schema=directory)
     return(df)
 
 def create_staging_trial(df):   
@@ -151,7 +155,7 @@ def create_staging_trial(df):
     df['trial_status'] = df['content'].str.extract(pat='P. End of Trial Status: (.*)')
     df=df.drop_duplicates()
     DatabaseInterface().drop_table('"s"taging_15_09_2021"."TRIAL_INFORMATION"')
-    df.to_sql('TRIAL_INFORMATION', DatabaseInterface().getConnection(engine = True), index = True, if_exists='append',schema='staging_15_09_2021')
+    df.to_sql('TRIAL_INFORMATION', DatabaseInterface().getConnection(engine = True), index = True, if_exists='append',schema=directory)
     return(df)
 
 def create_trial_subject(df): 
@@ -170,9 +174,13 @@ def create_trial_subject(df):
     df['trial_subject_inMemberState'] = df['content'].str.extract(pat='F.4.1 In the member state: (.*)')
     df['trial_multinational'] = df['content'].str.extract(pat='F.4.2 For a multinational trial (.*)')
     df['trial_clinical'] = df['content'].str.extract(pat='F.4.2.2 In the whole clinical trial: (.*)')
+    df=df[['summary_EudraCT_Number','trial_subject_Utero','trial_subject_Preterm','trial_subject_Newborns',
+    'trial_subject_toddlers','trail_subject_Children',
+    'trail_subject_Adolescents','trail_subject_Adults','trail_subject_total_Adults','trail_subject_Elderly',
+    'trial_subject_Female','trial_subject_male','trial_subject_inMemberState','trial_multinational','trial_clinical']]
     df=df.drop_duplicates()
-    DatabaseInterface().drop_table('staging_15_09_2021.TRIAL_SUBJECT_INFO')
-    df.to_sql('TRIAL_SUBJECT_INFO', DatabaseInterface().getConnection(engine = True), index = True, if_exists='append',schema='staging_15_09_2021')
+    DatabaseInterface().drop_table('"staging_15_09_2021"."TRIAL_SUBJECT_INFO"')
+    df.to_sql('TRIAL_SUBJECT_INFO', DatabaseInterface().getConnection(engine = True), index = True, if_exists='append',schema=directory)
     return(df)
 
 def create_trial_review(df):
@@ -180,23 +188,31 @@ def create_trial_review(df):
     df['trial_review_Authority'] = df['content'].str.extract(pat='N. Competent Authority Decision (.*)')
     df['trial_review_ethics_Committee'] = df['content'].str.extract(pat='N. Ethics Committee Opinion of the trial application: (.*)')
     df['trial_review_ethics_committeReason'] = df['content'].str.extract(pat='N. Ethics Committee Opinion: Reason\(s\) for unfavourable opinion: (.*)')
+    df=df[['summary_EudraCT_Number','trial_review_Authority','trial_review_ethics_Committee','trial_review_ethics_committeReason']]
     df=df.drop_duplicates()
-    DatabaseInterface().drop_table('staging_15_09_2021.TRIAL_REVIEW_INFO')
-    df.to_sql('TRIAL_REVIEW_INFO', DatabaseInterface().getConnection(engine = True), index = True, if_exists='append',schema='staging_15_09_2021')
+    DatabaseInterface().drop_table('"staging_15_09_2021"."TRIAL_REVIEW_INFO"')
+    df.to_sql('TRIAL_REVIEW_INFO', DatabaseInterface().getConnection(engine = True), index = True, if_exists='append',schema=directory)
     return(df)
  
-def create_time_dimention(df):
-    df['summary_EudraCT_Number'] = df['content'].str.extract(pat='EudraCT Number: (.*)')   
-    df['summary_trial_dateEntered'] = df['content'].str.extract(pat='Date on which this record was first entered in the EudraCT database: (.*)')
-    df['trial_review_authority_date'] = df['content'].str.extract(pat='N. Date of Competent Authority Decision:  (.*)')
+def create_time_dimension(df:pd.DataFrame):
+    df['summary_EudraCT_Number'] = df['content'].str.extract(pat='EudraCT Number: (.*)')  
+    df.dropna(subset=['summary_EudraCT_Number'], inplace=True)
+    df['summary_trial_dateEntered']= df['content'].str.extract(pat='Date on which this record was first entered in the EudraCT database: (.*)')
+    df['summary_trial_dateEntered'] = pd.to_datetime(df['summary_trial_dateEntered'].apply(str),errors='ignore',format='%Y-%m-%d')
+    print(df['summary_trial_dateEntered'])
+    print(df.dtypes)
+    df['trial_review_authority_date'] = df['content'].str.extract(pat='N. Date of Ethics Committee Opinion: (.*)')
+    df['trial_review_authority_date'] = pd.to_datetime(df['trial_review_authority_date'].apply(str),errors='ignore',format='%Y-%m-%d')
     df['trail_review_ethics_date'] = df['content'].str.extract(pat='N. Date of Ethics Committee Opinion: (.*)')
+    df['trail_review_ethics_date'] = pd.to_datetime(df['trail_review_ethics_date'].apply(str),errors='ignore',format='%Y-%m-%d')
+    df=df[['summary_EudraCT_Number','summary_trial_dateEntered','trial_review_authority_date','trail_review_ethics_date']]
     df=df.drop_duplicates()
-    DatabaseInterface().drop_table('staging_15_09_2021.TIME_DIMENTION')
-    df.to_sql('TIME_DIMENTION', DatabaseInterface().getConnection(engine = True), index = True, if_exists='append',schema='staging_15_09_2021')
+    DatabaseInterface().drop_table('"staging_15_09_2021"."TIME_DIMENSION"')
+    df.to_sql('TIME_DIMENSION', DatabaseInterface().getConnection(engine = True), index = True, if_exists='append',schema=directory)
     return(df)
-## Read from Ingestion Table
 
-df = pd.read_sql_table('load_txt',DatabaseInterface().getConnection(engine = True),schema='staging_15_09_2021')
+## Read from Ingestion Table
+df = pd.read_sql_table('load_txt',DatabaseInterface().getConnection(engine = True),schema=directory)
 #build all the staging tables
 create_staging_sponsor(df)
 create_staging_protocol(df)
@@ -205,5 +221,5 @@ create_staging_trial(df)
 create_trial_subject(df)
 create_trial_review(df)
 create_staging_summary(df)
-create_time_dimention(df)
+create_time_dimension(df)
             

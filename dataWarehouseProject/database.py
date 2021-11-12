@@ -6,10 +6,10 @@ from sqlalchemy import create_engine
 class DatabaseInterface:
     def __init__(self) -> None:
         '''Interface for romes db'''
-        self.host = '127.0.0.1'
-        self.user = 'postgres'
-        self.password = 'Mamanmaa21'
-        self.dbname = 'postgres'
+        self.host = 'ddcmstud.ugent.be'
+        self.user = 'student16'
+        self.password = 'rrxnkuefhm'
+        self.dbname = 'student16'
         self.port='8081'
 
     def getConnection(self, engine = False):

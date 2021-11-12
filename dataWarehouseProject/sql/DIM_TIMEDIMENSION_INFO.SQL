@@ -1,5 +1,6 @@
-CREATE TABLE "dataWareHouse"."DIM_TIMEDIMENTION_INFO" (
-	"summary_EudraCT_Number" text PRIMARY KEY,
+CREATE TABLE "dataWareHouse"."DIM_TIMEDIMENSION_INFO" (
+	ID SERIAL PRIMARY KEY,
+	"summary_EudraCT_Number" text null,
 	"file_Name" text NULL,
 	"summary_trial_dateEntered" timestamp,
 	"trial_review_authority_date" timestamp,

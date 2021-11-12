@@ -11,7 +11,6 @@ CREATE TABLE "dataWareHouse"."DIM_TRIAL_SUBJECT_INFO" (
 	"trail_subject_Adults" text NULL,
 	"trail_subject_total_Adults" text NULL,
 	"trail_subject_Elderly" text NULL,
-	"trail_subject_total_Elderly" text NULL,
 	"trial_subject_Female" text NULL,
 	trial_subject_male text NULL,
 	"trial_subject_inMemberState" text NULL,
