@@ -5,7 +5,7 @@ import traceback
 from numpy import NaN
 import pandas as pd
 from dataWarehouseProject.database import DatabaseInterface
-from dataWarehouseProject.etlProcess import staging_15_09_2021
+from dataWarehouseProject.etlProcess import staging_process
 # get all files in a list from the directory.
 rootDir = "C:/Users/manja/OneDrive/Documents/Advanced Database/clinical_trials_dump/"
 #fullPath=path+'/'+f
@@ -20,12 +20,12 @@ def read_content(f,fileName,subDir):
         df['file_Name']=fileName
         df['run_date']=datetime.datetime.now()
         directory =f'staging_{subDir.replace("-", "_")}'
-        DatabaseInterface().drop_table(directory+'.load_txt')
+        DatabaseInterface().drop_table(f'"{directory}"."load_txt"')
         df.to_sql('load_txt', DatabaseInterface().getConnection(engine = True), index = False, if_exists='append',schema=directory)
-        
-    return df
+        return df
 
 subDirectories = os.listdir(rootDir)
+subDirectories.sort()
 print(subDirectories)
 for subDir in subDirectories:
     files= os.listdir(os.path.join(rootDir, subDir))
@@ -39,6 +39,7 @@ for subDir in subDirectories:
                 print("Successfully ran" +file)
         except:
                 print(f'Failed to load:' + os.path.join(rootDir, subDir,file))
-                print(traceback.format_exc())
-       
-            
+                print(traceback.format_exc()) 
+    
+    staging_process.run_staging_process(subDir)       
+    

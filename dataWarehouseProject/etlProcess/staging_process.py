@@ -5,7 +5,7 @@ from numpy import NaN
 import pandas as pd
 import re
 from dataWarehouseProject.database import DatabaseInterface
-directory=sys.argv[1]
+con = DatabaseInterface().getConnection(engine = True)
 ##### Extract Methods ########
 def extract_sources_sponsor(test_string):
     elements = [line for line in test_string.split("\n") if line.startswith('B.4.')]
@@ -41,7 +41,7 @@ def extract_sources_trial_duration(test_string):
         output.append((years, month,days))
 
 ######## Create Staging Tables #########
-def create_staging_summary(df):   
+def create_staging_summary(df,directory):   
     df['summary_EudraCT_Number'] = df['content'].str.extract(pat='EudraCT Number: (.*)')
     df['summary_Protocol_Number'] = df['content'].str.extract(pat='Sponsor''s Protocol Code Number: (.*)')
     ##df['summary_NCA'] = df['content'].str.extract(pat='National Competent Authority: (.*)')
@@ -51,10 +51,11 @@ def create_staging_summary(df):
     df=df[['uid','summary_EudraCT_Number','summary_Protocol_Number','summary_trial_type','summary_trial_status']]
     df=df.drop_duplicates()
     DatabaseInterface().drop_table('"staging_15_09_2021"."SUMMARY_INFORMATION"')
-    df.to_sql('SUMMARY_INFORMATION', DatabaseInterface().getConnection(engine = True), index = True, if_exists='append',schema=directory)
+    df.to_sql('SUMMARY_INFORMATION', con, index = True, if_exists='append',schema=directory)
+    
     return(df)
 
-def create_staging_protocol(df):   
+def create_staging_protocol(df,directory):   
     df['summary_EudraCT_Number'] = df['content'].str.extract(pat='EudraCT Number: (.*)')
     df['protocol_member_state'] = df['content'].str.extract(pat='A.1 Member State Concerned: (.*)')
     df['protocol_EudraCT_Number'] = df['content'].str.extract(pat='A.2 EudraCT number: (.*)')
@@ -69,10 +70,10 @@ def create_staging_protocol(df):
     'protocol_trial_fullTitle','protocol_code_number']]
     df=df.drop_duplicates()
     DatabaseInterface().drop_table('"staging_15_09_2021"."PROTOCOL_INFORMATION"')
-    df.to_sql('PROTOCOL_INFORMATION', DatabaseInterface().getConnection(engine = True), index = True, if_exists='append',schema=directory)
+    df.to_sql('PROTOCOL_INFORMATION', con, index = True, if_exists='append',schema=directory)
     return(df)
 
-def create_staging_sponsor(df): 
+def create_staging_sponsor(df,directory): 
     df['summary_EudraCT_Number'] = df['content'].str.extract(pat='EudraCT Number: (.*)')  
     df['sponsor_name'] = df['content'].str.extract(pat='B.1.1 Name of Sponsor: (.*)')
     df['sponsor_country'] = df['content'].str.extract(pat='B.1.3.4	Country: (.*)')
@@ -89,10 +90,10 @@ def create_staging_sponsor(df):
     'sponsor_city','sponsor_postalCode','sponsor_email']]
     df=df.drop_duplicates()
     DatabaseInterface().drop_table('"staging_15_09_2021"."SPONSOR_INFORMATION"')
-    df.to_sql('SPONSOR_INFORMATION', DatabaseInterface().getConnection(engine = True), index = True, if_exists='append',schema=directory)
+    df.to_sql('SPONSOR_INFORMATION', con, index = True, if_exists='append',schema=directory)
     return(df)
 
-def create_staging_imp(df):  
+def create_staging_imp(df,directory):  
     df['summary_EudraCT_Number'] = df['content'].str.extract(pat='EudraCT Number: (.*)')
     df['imp_role'] = df['content'].str.extract(pat='D.1.2 and D.1.3 IMP Role: (.*)')
     df['uid'] = df["summary_EudraCT_Number"] + df["imp_role"]
@@ -127,10 +128,10 @@ def create_staging_imp(df):
     'imp_productName','imp_productCode']]
     df=df.drop_duplicates()    
     DatabaseInterface().drop_table('"staging_15_09_2021"."IMP_IDENTIFICATION"')
-    df.to_sql('IMP_IDENTIFICATION', DatabaseInterface().getConnection(engine = True), index = True, if_exists='append',schema=directory)
+    df.to_sql('IMP_IDENTIFICATION', con, index = True, if_exists='append',schema=directory)
     return(df)
 
-def create_staging_trial(df):   
+def create_staging_trial(df,directory):   
     df['summary_EudraCT_Number'] = df['content'].str.extract(pat='EudraCT Number: (.*)')
     df['trial_investigation'] = df['content'].str.extract(pat='E.1.1 Medical condition\(s\) being investigated: (.*)')
     df['trial_language'] = df['content'].str.extract(pat='E.1.1.1 Medical condition in easily understood language: (.*)')
@@ -155,10 +156,10 @@ def create_staging_trial(df):
     df['trial_status'] = df['content'].str.extract(pat='P. End of Trial Status: (.*)')
     df=df.drop_duplicates()
     DatabaseInterface().drop_table('"s"taging_15_09_2021"."TRIAL_INFORMATION"')
-    df.to_sql('TRIAL_INFORMATION', DatabaseInterface().getConnection(engine = True), index = True, if_exists='append',schema=directory)
+    df.to_sql('TRIAL_INFORMATION', con, index = True, if_exists='append',schema=directory)
     return(df)
 
-def create_trial_subject(df): 
+def create_trial_subject(df,directory): 
     df['summary_EudraCT_Number'] = df['content'].str.extract(pat='EudraCT Number: (.*)')  
     df['trial_subject_Utero'] = df['content'].str.extract(pat='F.1.1.1.1 Number of subjects for this age range: (.*)')
     df['trial_subject_Preterm'] = df['content'].str.extract(pat='F.1.1.2.1 Number of subjects for this age range: (.*)')
@@ -180,10 +181,10 @@ def create_trial_subject(df):
     'trial_subject_Female','trial_subject_male','trial_subject_inMemberState','trial_multinational','trial_clinical']]
     df=df.drop_duplicates()
     DatabaseInterface().drop_table('"staging_15_09_2021"."TRIAL_SUBJECT_INFO"')
-    df.to_sql('TRIAL_SUBJECT_INFO', DatabaseInterface().getConnection(engine = True), index = True, if_exists='append',schema=directory)
+    df.to_sql('TRIAL_SUBJECT_INFO', con, index = True, if_exists='append',schema=directory)
     return(df)
 
-def create_trial_review(df):
+def create_trial_review(df,directory):
     df['summary_EudraCT_Number'] = df['content'].str.extract(pat='EudraCT Number: (.*)')   
     df['trial_review_Authority'] = df['content'].str.extract(pat='N. Competent Authority Decision (.*)')
     df['trial_review_ethics_Committee'] = df['content'].str.extract(pat='N. Ethics Committee Opinion of the trial application: (.*)')
@@ -191,10 +192,10 @@ def create_trial_review(df):
     df=df[['summary_EudraCT_Number','trial_review_Authority','trial_review_ethics_Committee','trial_review_ethics_committeReason']]
     df=df.drop_duplicates()
     DatabaseInterface().drop_table('"staging_15_09_2021"."TRIAL_REVIEW_INFO"')
-    df.to_sql('TRIAL_REVIEW_INFO', DatabaseInterface().getConnection(engine = True), index = True, if_exists='append',schema=directory)
+    df.to_sql('TRIAL_REVIEW_INFO', con, index = True, if_exists='append',schema=directory)
     return(df)
  
-def create_time_dimension(df:pd.DataFrame):
+def create_time_dimension(df:pd.DataFrame,directory):
     df['summary_EudraCT_Number'] = df['content'].str.extract(pat='EudraCT Number: (.*)')  
     df.dropna(subset=['summary_EudraCT_Number'], inplace=True)
     df['summary_trial_dateEntered']= df['content'].str.extract(pat='Date on which this record was first entered in the EudraCT database: (.*)')
@@ -208,18 +209,18 @@ def create_time_dimension(df:pd.DataFrame):
     df=df[['summary_EudraCT_Number','summary_trial_dateEntered','trial_review_authority_date','trail_review_ethics_date']]
     df=df.drop_duplicates()
     DatabaseInterface().drop_table('"staging_15_09_2021"."TIME_DIMENSION"')
-    df.to_sql('TIME_DIMENSION', DatabaseInterface().getConnection(engine = True), index = True, if_exists='append',schema=directory)
+    df.to_sql('TIME_DIMENSION', con, index = True, if_exists='append',schema=directory)
     return(df)
 
-## Read from Ingestion Table
-df = pd.read_sql_table('load_txt',DatabaseInterface().getConnection(engine = True),schema=directory)
-#build all the staging tables
-create_staging_sponsor(df)
-create_staging_protocol(df)
-create_staging_imp(df)
-create_staging_trial(df)
-create_trial_subject(df)
-create_trial_review(df)
-create_staging_summary(df)
-create_time_dimension(df)
-            
+def run_staging_process(directory):
+    ## Read from Ingestion Table
+    df = pd.read_sql_table('load_txt',con,schema=directory)
+    #build all the staging tables
+    create_staging_sponsor(df,directory)
+    create_staging_protocol(df,directory)
+    create_staging_imp(df,directory)
+    create_staging_trial(df,directory)
+    create_trial_subject(df,directory)
+    create_trial_review(df,directory)
+    create_staging_summary(df,directory)
+    create_time_dimension(df,directory)
