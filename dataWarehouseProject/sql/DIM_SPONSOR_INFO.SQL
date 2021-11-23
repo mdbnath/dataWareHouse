@@ -1,6 +1,5 @@
 CREATE TABLE "dataWareHouse"."DIM_SPONSOR_INFORMATION" (
-	ID SERIAL PRIMARY KEY,
-	uid text,
+	"uid" text PRIMARY KEY,
 	"summary_EudraCT_Number" text NULL,
 	sponsor_name text NULL,
 	sponsor_country text NULL,
@@ -13,6 +12,6 @@ CREATE TABLE "dataWareHouse"."DIM_SPONSOR_INFORMATION" (
 	sponsor_email text NULL,
 	"file_Name" text NULL,
 	valid_from timestamp default CURRENT_TIMESTAMP,
-	valid_to timestamp default CURRENT_TIMESTAMP
+	valid_to timestamp default null
 );
 

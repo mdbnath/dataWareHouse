@@ -1,7 +1,7 @@
 
 CREATE TABLE "dataWareHouse"."DIM_TRIAL_SUBJECT_INFO" (	
 	
-	ID SERIAL PRIMARY KEY,
+	"uid" text PRIMARY KEY,
 	"summary_EudraCT_Number" text NULL,
 	"trial_subject_Utero" text NULL,
 	"trial_subject_Newborns" text NULL,
@@ -18,5 +18,5 @@ CREATE TABLE "dataWareHouse"."DIM_TRIAL_SUBJECT_INFO" (
 	trial_clinical text NULL,
 	"file_Name" text NULL,
 	valid_from timestamp default CURRENT_TIMESTAMP,
-	valid_to timestamp default CURRENT_TIMESTAMP
+	valid_to timestamp default null
 );

@@ -1,6 +1,6 @@
 CREATE TABLE "dataWareHouse"."DIM_SUMMARY_INFORMATION" (
     
-    "uid" text,
+    "uid" text PRIMARY KEY,
 	"summary_EudraCT_Number" text,
 	"file_Name" text NULL,
 	"summary_Protocol_Number" text NULL,

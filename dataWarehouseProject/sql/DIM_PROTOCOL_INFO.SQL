@@ -1,6 +1,5 @@
 CREATE TABLE "dataWareHouse"."DIM_PROTOCOL_INFORMATION" (
-	ID SERIAL PRIMARY KEY,
-	"uid" text,
+	"uid" text PRIMARY KEY,
 	"summary_EudraCT_Number" text NULL,
 	"protocol_code_number" text NULL,
 	"protocol_member_state" text NULL,
@@ -8,5 +7,5 @@ CREATE TABLE "dataWareHouse"."DIM_PROTOCOL_INFORMATION" (
 	"protocol_trial_fulltitle" text null,
     "file_Name" text NULL,
 	"valid_from" timestamp default CURRENT_TIMESTAMP,
-	"valid_to" timestamp default CURRENT_TIMESTAMP
+	"valid_to" timestamp default null
 );

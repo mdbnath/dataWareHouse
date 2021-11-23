@@ -5,9 +5,7 @@ import traceback
 from numpy import NaN
 import pandas as pd
 from dataWarehouseProject.database import DatabaseInterface
-from dataWarehouseProject.etlProcess import staging_process_txt
-##from dataWarehouseProject.etlProcess import staging_process_pdf
-from dataWarehouseProject.etlProcess import dimension
+from dataWarehouseProject.etlProcess import staging_process
 from dataWarehouseProject.database import DatabaseInterface
 con = DatabaseInterface().getConnection(engine = True)
 # get all files in a list from the directory.
@@ -34,6 +32,10 @@ subDirectories.sort()
 print(subDirectories)
 for subDir in subDirectories:
     files= os.listdir(os.path.join(rootDir, subDir))
+    print(subDir)
+    print('###############################################')
+    print(files)
+    print('###############################################')
     for file in files:
         try:
                 read_content(os.path.join(rootDir, subDir,file),file,subDir)
@@ -42,6 +44,5 @@ for subDir in subDirectories:
                 print(f'Failed to load:' + os.path.join(rootDir, subDir,file))
                 print(traceback.format_exc()) 
     
-    staging_process_txt.run_staging_process(subDir) 
-    dimension.run_dim_tables(subDir) 
+    staging_process.run_staging_process(subDir)       
     

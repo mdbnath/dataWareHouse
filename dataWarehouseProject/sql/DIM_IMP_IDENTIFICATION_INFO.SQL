@@ -1,8 +1,7 @@
 
 
 CREATE TABLE "dataWareHouse"."DIM_IMP_IDENTIFICATION" (
-	ID SERIAL PRIMARY KEY,
-	"uid" text,
+    "uid" text PRIMARY KEY,
 	"file_Name" text NULL,
 	"summary_EudraCT_Number" text NULL,
 	imp_role text NULL,	
@@ -33,5 +32,6 @@ CREATE TABLE "dataWareHouse"."DIM_IMP_IDENTIFICATION" (
 	--"imp_advanced_Therapy" text NULL,
 	--imp_placebo_used text NULL,
 	valid_from timestamp default CURRENT_TIMESTAMP,
-	valid_to timestamp default CURRENT_TIMESTAMP
+	valid_to timestamp default null
 );
+ADD CONSTRAINT "uid" UNIQUE ("uid");
