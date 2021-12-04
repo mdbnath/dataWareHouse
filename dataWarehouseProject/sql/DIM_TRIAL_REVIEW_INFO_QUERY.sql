@@ -1,29 +1,45 @@
+CREATE OR REPLACE FUNCTION public.DIM_TRIAL_REVIEW_INFO()
+RETURNS BOOLEAN AS $$
+begin
 with rows_in_scope as (
 select
+		src."uid",
 		src."summary_EudraCT_Number",
 		src."trial_review_Authority",	
 		src."trial_review_ethics_Committee",
-		src."trial_review_ethics_committeReason"
+		src."trial_review_ethics_committeReason",
+	src."valid_from" ,
+	src."valid_to"
 from
-		"staging_15_09_2021"."TRIAL_REVIEW_INFO" src
+	"TRIAL_REVIEW_INFO" src
 left join "dataWareHouse"."DIM_TRIAL_REVIEW_INFO" dim
-	  on
-		src."summary_EudraCT_Number" = dim."summary_EudraCT_Number"
-	and src."trial_review_Authority" = dim."trial_review_Authority"
-	and src."trial_review_ethics_Committee" = dim."trial_review_ethics_Committee"
-	and src."trial_review_ethics_committeReason" = dim."trial_review_ethics_committeReason"
-where
-		dim."summary_EudraCT_Number" is null)
-	insert
+	  		on src."uid"=dim."uid"
+		and	src."summary_EudraCT_Number" = dim."summary_EudraCT_Number"
+		and src."trial_review_Authority" = dim."trial_review_Authority"
+		and src."trial_review_ethics_Committee" = dim."trial_review_ethics_Committee"
+		and src."trial_review_ethics_committeReason" = dim."trial_review_ethics_committeReason"
+)
+insert
 		into
-		"dataWareHouse"."DIM_TRIAL_REVIEW_INFO" ("summary_EudraCT_Number",
-		"trial_review_Authority",
+		"dataWareHouse"."DIM_TRIAL_REVIEW_INFO" (
+	"uid",
+	"summary_EudraCT_Number",
+	"trial_review_Authority",	
 	"trial_review_ethics_Committee",
-	"trial_review_ethics_committeReason") (
+	"trial_review_ethics_committeReason",
+	"valid_from" ,
+	"valid_to" ) (
 	select
-			"summary_EudraCT_Number",
-		"trial_review_Authority",
+		"uid",
+		"summary_EudraCT_Number",
+		"trial_review_Authority",	
 		"trial_review_ethics_Committee",
-		"trial_review_ethics_committeReason"
-	from
-			rows_in_scope )
+		"trial_review_ethics_committeReason",		
+		current_timestamp,
+ 		null from rows_in_scope ) ON CONFLICT ("uid") DO UPDATE set "valid_to" = current_timestamp;	
+		 return true;
+exception
+when others then
+return false;
+END;
+$$ LANGUAGE plpgsql;

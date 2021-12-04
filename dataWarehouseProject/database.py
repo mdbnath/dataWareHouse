@@ -55,6 +55,7 @@ class DatabaseInterface(metaclass=Singleton):
     def drop_table(self,tableName):
         con = self.getConnection()
         cur = con.cursor()
+        print('######## I am in databse.py #####' +tableName)
         cur.execute('drop table if exists '+tableName)
         con.commit()
         cur.close()       

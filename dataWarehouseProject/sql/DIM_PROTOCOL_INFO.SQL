@@ -1,5 +1,6 @@
 CREATE TABLE "dataWareHouse"."DIM_PROTOCOL_INFORMATION" (
-	"uid" text PRIMARY KEY,
+	 id serial PRIMARY key,
+	"uid" text ,
 	"summary_EudraCT_Number" text NULL,
 	"protocol_code_number" text NULL,
 	"protocol_member_state" text NULL,

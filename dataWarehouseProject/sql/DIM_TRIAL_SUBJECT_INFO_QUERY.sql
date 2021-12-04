@@ -1,7 +1,9 @@
-	
+CREATE OR REPLACE FUNCTION public.DIM_TRIAL_SUBJECT_INFO()
+RETURNS BOOLEAN AS $$
+begin
 with rows_in_scope as (
-	select
-	src."summary_EudraCT_Number",
+select
+		src."summary_EudraCT_Number",
 	src."trial_subject_Utero",
 	src."trial_subject_Newborns",
 	src."trial_subject_toddlers",
@@ -14,11 +16,12 @@ with rows_in_scope as (
 	src."trial_subject_male",
 	src."trial_subject_inMemberState",
 	src."trial_multinational",
-	src."trial_clinical"
+	src."trial_clinical",
+	src."valid_from" ,
+	src."valid_to"
 from
-	"staging_15_09_2021"."TRIAL_SUBJECT_INFO" src
-	left join "dataWareHouse"."DIM_TRIAL_SUBJECT_INFO" dim
-	  on
+	"TRIAL_SUBJECT_INFO" src
+left join "dataWareHouse"."DIM_TRIAL_SUBJECT_INFO" dim on
 		src."summary_EudraCT_Number" = dim."summary_EudraCT_Number"
 		and src."trial_subject_Utero" = dim."trial_subject_Utero"
 		and src."trial_subject_Newborns" = dim."trial_subject_Newborns"
@@ -33,12 +36,12 @@ from
 		and src."trial_subject_inMemberState" = dim."trial_subject_inMemberState"
 		and src."trial_multinational" = dim."trial_multinational"
 		and src."trial_clinical" = dim."trial_clinical"
-	where
-		dim."summary_EudraCT_Number" is null)
-	insert
+)
+insert
 		into
 		"dataWareHouse"."DIM_TRIAL_SUBJECT_INFO" (
-		"summary_EudraCT_Number",
+	"uid",
+	    "summary_EudraCT_Number",
 		"trial_subject_Utero",
 		"trial_subject_Newborns",
 		"trial_subject_toddlers",
@@ -51,9 +54,12 @@ from
 		"trial_subject_male",
 		"trial_subject_inMemberState",
 		"trial_multinational",
-		"trial_clinical"
-) (select
-		"summary_EudraCT_Number",
+		"trial_clinical",
+	"valid_from" ,
+	"valid_to" ) (
+	select
+		"uid",
+		    "summary_EudraCT_Number",
 		"trial_subject_Utero",
 		"trial_subject_Newborns",
 		"trial_subject_toddlers",
@@ -64,7 +70,14 @@ from
 		"trail_subject_Elderly",
 		"trial_subject_Female",
 		"trial_subject_male",
-		"trial_subject_inMemberState",
-		"trial_multinational",
-		"trial_clinical"		
-from  rows_in_scope )
+		"trial_subject_inMemberState",	
+				"trial_multinational",
+		"trial_clinical",
+		current_timestamp,
+ 		null from rows_in_scope ) ON CONFLICT ("uid") DO UPDATE set "valid_to" = current_timestamp;	
+		 return true;
+exception
+when others then
+return false;
+END;
+$$ LANGUAGE plpgsql;

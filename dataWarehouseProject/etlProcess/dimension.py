@@ -17,4 +17,4 @@ def run_dim_tables(subDir):
         print(f'Failed to load:' + os.path.join(schema_name))
         print(traceback.format_exc()) 
 
-run_dim_tables('15_09_2021')
+##run_dim_tables('15_09_2021')

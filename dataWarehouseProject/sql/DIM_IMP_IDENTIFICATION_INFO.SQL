@@ -34,4 +34,3 @@ CREATE TABLE "dataWareHouse"."DIM_IMP_IDENTIFICATION" (
 	valid_from timestamp default CURRENT_TIMESTAMP,
 	valid_to timestamp default null
 );
-ADD CONSTRAINT "uid" UNIQUE ("uid");

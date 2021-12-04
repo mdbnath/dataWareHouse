@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION public.protocol_information()
+CREATE OR REPLACE FUNCTION public.dim_protocol_information()
 RETURNS BOOLEAN AS $$
 begin
 with rows_in_scope as (
@@ -40,6 +40,7 @@ insert
 		current_timestamp,
  		null from rows_in_scope ) ON CONFLICT ("uid")
 DO UPDATE set "valid_to" = current_timestamp;
+
 return true;
 exception
 when others then
