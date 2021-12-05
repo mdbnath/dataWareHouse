@@ -1,12 +1,14 @@
 
-from io import StringIO
+import io
 from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
 from pdfminer.converter import TextConverter
 from pdfminer.layout import LAParams
 from pdfminer.pdfpage import PDFPage
 import os
 import sys, getopt
-
+# set paths accordingly:
+pdfDir = r"C:\Users\manja\OneDrive\Documents\Advanced Database\clinical_trials_dump\15-09-2021\\"
+txtDir = r"C:\Users\manja\OneDrive\Documents\Advanced Database\clinical_trials_dump\15-09-2021\pdftotxt\\"
 #converts pdf, returns its text content as a string
 def convert(fname, pages=None):
     if not pages:
@@ -40,7 +42,5 @@ def convertMultiple(pdfDir, txtDir):
             textFile = open(textFilename, "w") #make text file
             textFile.write(text) #write text to text file
 
-# set paths accordingly:
-pdfDir = "C:\Users\manja\OneDrive\Documents\Advanced Database\clinical_trials_dump\15-09-2021"
-txtDir = "C:\Users\manja\OneDrive\Documents\Advanced Database\clinical_trials_dump\15-09-2021\pdftotxt"
+
 convertMultiple(pdfDir, txtDir)

@@ -4,5 +4,6 @@
     },
     "terminal.integrated.env.windows": {
         "PYTHONPATH": "${workspaceFolder}"
-    }
+    },
+    "checkpoints.showActiveFileOnly": true
 }

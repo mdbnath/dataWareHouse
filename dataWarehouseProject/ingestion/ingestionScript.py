@@ -48,6 +48,7 @@ def process_txt_staging(rootDir):
         files= os.listdir(os.path.join(rootDir, subDir))
         for file in files:
             try:
+                    print("++++++++++++++++++++++++++++",os.path.join(rootDir, subDir,file))
                     read_text_content(os.path.join(rootDir, subDir,file),file,schema_name)
                     print("Successfully ran" +file)
             except:
@@ -78,8 +79,8 @@ def process_pdf_convert():
         for file in files:
             print("############" + fullPathPDF+file+"File loop is this")
             txtfile=file.split(".")[0]+".txt"
-            print(f'''pdftotext -layout "{fullPathPDF+file}" "{fullPathTXT+txtfile}"''')
-            os.system(f'''pdftotext -layout "{fullPathPDF+file}" "{fullPathTXT+txtfile}"''')
+            dfs = tabula.read_pdf(fullPathPDF+file, multiple_tables=True, pages = 'all',lattice=True)        
+            #os.system(f'''pdftotext -layout "{fullPathPDF+file}" "{fullPathTXT+txtfile}"''')
         
 def process_pdf_staging():
     rootDirPdf = "C:/Users/manja/OneDrive/Documents/Advanced Database/clinical_trials_dump"
@@ -112,7 +113,7 @@ def process_pdf_staging():
     print('############################################ STAGING COMPLETED ############################### ')
     ##dimension.run_dim_tables(subDir) 
     
-process_pdf_convert()
-process_pdf_staging()
+#process_pdf_convert()
+#process_pdf_staging()
 process_txt_staging(rootDir)
 
