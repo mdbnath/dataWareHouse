@@ -1,17 +1,17 @@
 
 
 CREATE TABLE "dataWareHouse"."DIM_IMP_IDENTIFICATION" (
-    "uid" text PRIMARY KEY,
-	"file_Name" text NULL,
-	"summary_EudraCT_Number" text NULL,
+	id int GENERATED ALWAYS AS IDENTITY primary KEY,
+    "uid" text,
+	summary_EudraCT_Number text NULL,
 	imp_role text NULL,	
 	imp_marketing_authorisation text NULL,
-	"imp_Trade_name" text NULL,
+	imp_Trade_name text NULL,
 	imp_marketing_authorisation_holder text NULL,
 	imp_orphan_drug text NULL,
 	imp_orphan_drug_number text NULL,
-	"imp_productName" text NULL,
-	"imp_productCode" text NULL,
+	imp_productName text NULL,
+	imp_productCode text NULL,
 	--imp_pharmaceutical_form text NULL,
 	--imp_paediatric_formulation text NULL,
 	--imp_admin_routes text NULL,
@@ -31,6 +31,7 @@ CREATE TABLE "dataWareHouse"."DIM_IMP_IDENTIFICATION" (
 	--"imp_CAT_classification" text NULL,
 	--"imp_advanced_Therapy" text NULL,
 	--imp_placebo_used text NULL,
-	valid_from timestamp default CURRENT_TIMESTAMP,
+	file_Name text NULL,
+	valid_from timestamp,
 	valid_to timestamp default null
 );

@@ -42,7 +42,7 @@ def extract_sources_trial_duration(test_string):
         output.append((years, month,days))
 
 ######## Create Staging Tables #########
-def create_staging_summary(df,schema_name):   
+def create_staging_summary(df,schema_name,directory):   
     df['uid'] = df['content'].str.extract(pat='Link: https://www.clinicaltrialsregister.eu/ctr-search/trial/(.*)')
     df.dropna(subset = ['uid'], inplace= True)
     df['uid'] = df['uid'].apply(lambda x: x.replace('-', '')[0:-1])
@@ -52,13 +52,15 @@ def create_staging_summary(df,schema_name):
     ##df['summary_NCA'] = df['content'].str.extract(pat='National Competent Authority: (.*)')
     df['summary_trial_type'] = df['content'].str.extract(pat='Clinical Trial Type: (.*)')   
     df['summary_trial_status'] = df['content'].str.extract(pat='Trial Status: (.*)')
-    df=df[['uid','summary_EudraCT_Number','summary_Protocol_Number','summary_trial_type','summary_trial_status']]
+    df['valid_from'] = pd.to_datetime(directory,errors='ignore',format='%d-%m-%Y')
+    df=df[['uid','summary_EudraCT_Number','summary_Protocol_Number','summary_trial_type','summary_trial_status','valid_from','file_Name']]
     df=df.drop_duplicates()
     dbInstance.drop_table(f'"{schema_name}"."SUMMARY_INFORMATION"')
+    df.columns = df.columns.str.lower()
     df.to_sql('SUMMARY_INFORMATION', con, index = True, if_exists='append',schema=schema_name)
     return(df)
 
-def create_staging_protocol(df,schema_name):   
+def create_staging_protocol(df,schema_name,directory):   
     df['uid'] = df['content'].str.extract(pat='Link: https://www.clinicaltrialsregister.eu/ctr-search/trial/(.*)')
     df.dropna(subset = ['uid'], inplace= True)
     df['uid'] = df['uid'].apply(lambda x: x.replace('-', '')[0:-1])
@@ -72,14 +74,16 @@ def create_staging_protocol(df,schema_name):
     ##df['protocol_UTRN_number'] = df['content'].str.extract(pat='A.5.3 WHO Universal Trial Reference Number \(UTRN\): (.*)')
     ##df['protocol_Paediatric_investigation'] = df['content'].str.extract(pat='A.7 Trial is part of a Paediatric Investigation Plan: (.*)')
     ##df['protocol_EMA_decision_number'] = df['content'].str.extract(pat='A.8 EMA Decision number of Paediatric Investigation Plan: (.*)')
+    df['valid_from'] = pd.to_datetime(directory,errors='ignore',format='%d-%m-%Y')
     df=df[['uid','summary_EudraCT_Number','protocol_member_state','protocol_EudraCT_Number',
-    'protocol_trial_fullTitle','protocol_code_number']]
+    'protocol_trial_fullTitle','protocol_code_number','valid_from','file_Name']]
     df=df.drop_duplicates()
     dbInstance.drop_table(f'"{schema_name}"."PROTOCOL_INFORMATION"')
+    df.columns = df.columns.str.lower()
     df.to_sql('PROTOCOL_INFORMATION', con, index = True, if_exists='append',schema=schema_name)
     return(df)
 
-def create_staging_sponsor(df,schema_name): 
+def create_staging_sponsor(df,schema_name,directory): 
     df['uid'] = df['content'].str.extract(pat='Link: https://www.clinicaltrialsregister.eu/ctr-search/trial/(.*)')
     df.dropna(subset = ['uid'], inplace= True)
     df['uid'] = df['uid'].apply(lambda x: x.replace('-', '')[0:-1])
@@ -94,15 +98,17 @@ def create_staging_sponsor(df,schema_name):
     df['sponsor_city'] = df['content'].str.extract(pat='B.5.3.2 Town/ city: (.*)')
     df['sponsor_postalCode'] = df['content'].str.extract(pat='B.5.3.3 Post code: (.*)')
     df['sponsor_email'] = df['content'].str.extract(pat='B.5.6 E-mail: (.*)')    
-    df=df[['uid','summary_EudraCT_Number','sponsor_name','sponsor_country',
-    'sponsor_status','sponsor_source','sponsor_organisation','sponsor_streetName',
-    'sponsor_city','sponsor_postalCode','sponsor_email']]
+    df['valid_from'] = pd.to_datetime(directory,errors='ignore',format='%d-%m-%Y')
+    print(df.columns)
+    df=df[['uid','summary_EudraCT_Number','sponsor_name','sponsor_country','sponsor_status','sponsor_source',
+    'sponsor_organisation','sponsor_streetName','sponsor_city','sponsor_postalCode','sponsor_email','valid_from','file_Name']]
     df=df.drop_duplicates()
     dbInstance.drop_table(f'"{schema_name}"."SPONSOR_INFORMATION"')
+    df.columns = df.columns.str.lower()
     df.to_sql('SPONSOR_INFORMATION', con, index = True, if_exists='append',schema=schema_name)
     return(df)
 
-def create_staging_imp(df,schema_name):  
+def create_staging_imp(df,schema_name,directory):  
     df['uid'] = df['content'].str.extract(pat='Link: https://www.clinicaltrialsregister.eu/ctr-search/trial/(.*)')
     df.dropna(subset = ['uid'], inplace= True)
     df['uid'] = df['uid'].apply(lambda x: x.replace('-', '')[0:-1])
@@ -135,11 +141,13 @@ def create_staging_imp(df,schema_name):
     ##df['imp_CAT_classification'] = df['content'].str.extract(pat='D.3.11.3.5 Committee on Advanced therapies \(CAT\) has issued a classification for this product: (.*)')
     ##df['imp_advanced_Therapy'] = df['content'].str.extract(pat='D.3.11.4 Combination product that includes a device, but does not involve an Advanced Therapy: (.*)')
     ##df['imp_placebo_used'] = df['content'].str.extract(pat='D.8.1 Is a Placebo used in this Trial? (.*)')   
+    df['valid_from'] = pd.to_datetime(directory,errors='ignore',format='%d-%m-%Y')
     df=df[['uid','summary_EudraCT_Number','imp_role','imp_marketing_authorisation',
     'imp_Trade_name','imp_marketing_authorisation_holder','imp_orphan_drug','imp_orphan_drug_number',
-    'imp_productName','imp_productCode']]
+    'imp_productName','imp_productCode','valid_from','file_Name']]
     df=df.drop_duplicates()    
     dbInstance.drop_table(f'"{schema_name}"."IMP_IDENTIFICATION"')
+    df.columns = df.columns.str.lower()
     df.to_sql('IMP_IDENTIFICATION', con, index = True, if_exists='append',schema=schema_name)
     return(df)
 
@@ -187,7 +195,7 @@ def create_staging_trial(df,schema_name,directory):
     df.to_sql('TRIAL_INFORMATION', con, index = True, if_exists='append',schema=schema_name)
     return(df)
 
-def create_trial_review(df: pd.DataFrame,schema_name):
+def create_trial_review(df: pd.DataFrame,schema_name,directory):
     df['uid'] = df['content'].str.extract(pat='Link: https://www.clinicaltrialsregister.eu/ctr-search/trial/(.*)')
     df.dropna(subset = ['uid'], inplace= True)
     df['uid'] = df['uid'].apply(lambda x: x.replace('-', '')[0:-1])
@@ -197,13 +205,14 @@ def create_trial_review(df: pd.DataFrame,schema_name):
     print('############################################',df['trial_review_Authority'])
     df['trial_review_ethics_Committee'] = df['content'].str.extract(pat='N. Ethics Committee Opinion of the trial application: (.*)')
     df['trial_review_ethics_committeReason'] = df['content'].str.extract(pat='N. Ethics Committee Opinion: Reason\(s\) for unfavourable opinion: (.*)')
-    df=df[['uid','summary_EudraCT_Number','trial_review_Authority','trial_review_ethics_Committee','trial_review_ethics_committeReason']]
+    df=df[['uid','summary_EudraCT_Number','trial_review_Authority','trial_review_ethics_Committee','trial_review_ethics_committeReason','file_Name']]
     df=df.drop_duplicates()
     dbInstance.drop_table(f'"{schema_name}"."TRIAL_REVIEW_INFO"')
+    df.columns = df.columns.str.lower()
     df.to_sql('TRIAL_REVIEW_INFO', con, index = True, if_exists='append',schema=schema_name)
     return(df)
  
-def create_time_dimension(df:pd.DataFrame,schema_name):
+def create_time_dimension(df:pd.DataFrame,schema_name,directory):
     df['uid'] = df['content'].str.extract(pat='Link: https://www.clinicaltrialsregister.eu/ctr-search/trial/(.*)')
     df.dropna(subset = ['uid'], inplace= True)
     df['uid'] = df['uid'].apply(lambda x: x.replace('-', '')[0:-1])
@@ -218,13 +227,15 @@ def create_time_dimension(df:pd.DataFrame,schema_name):
     df['trial_review_authority_date'] = pd.to_datetime(df['trial_review_authority_date'].apply(str),errors='ignore',format='%Y-%m-%d')
     df['trail_review_ethics_date'] = df['content'].str.extract(pat='N. Date of Ethics Committee Opinion: (.*)')
     df['trail_review_ethics_date'] = pd.to_datetime(df['trail_review_ethics_date'].apply(str),errors='ignore',format='%Y-%m-%d')
-    df=df[['uid','summary_EudraCT_Number','summary_trial_dateEntered','trial_review_authority_date','trail_review_ethics_date']]
+    df['valid_from'] = pd.to_datetime(directory,errors='ignore',format='%d-%m-%Y')
+    df=df[['uid','summary_EudraCT_Number','summary_trial_dateEntered','trial_review_authority_date','trail_review_ethics_date','valid_from','file_Name']]
     df=df.drop_duplicates()
     dbInstance.drop_table(f'"{schema_name}"."TIME_DIMENSION"')
+    df.columns = df.columns.str.lower()
     df.to_sql('TIME_DIMENSION', con, index = True, if_exists='append',schema=schema_name)
     return(df)
 
-def create_trial_subject(df,schema_name): 
+def create_trial_subject(df,schema_name,directory): 
     df['uid'] = df['content'].str.extract(pat='Link: https://www.clinicaltrialsregister.eu/ctr-search/trial/(.*)')
     df.dropna(subset = ['uid'], inplace= True)
     df['uid'] = df['uid'].apply(lambda x: x.replace('-', '')[0:-1])
@@ -236,20 +247,21 @@ def create_trial_subject(df,schema_name):
     df['trial_subject_toddlers'] = df['content'].str.extract(pat='F.1.1.4.1 Number of subjects for this age range: (.*)')
     df['trail_subject_Children'] = df['content'].str.extract(pat='F.1.1.5.1 Number of subjects for this age range: (.*)')
     df['trail_subject_Adolescents'] = df['content'].str.extract(pat='F.1.1.6.1 Number of subjects for this age range: (.*)')
-    df['trail_subject_Adults'] = df['content'].str.extract(pat='F.1.1.5.1 Number of subjects for this age range:(.*)')
-    df['trail_subject_total_Adults'] = df['content'].str.extract(pat='F.1.2.1 Number of subjects for this age range:(.*)')
+    df['trail_subject_Adults'] = df['content'].str.extract(pat='F.1.2.1 Number of subjects for this age range:(.*)')
     df['trail_subject_Elderly'] = df['content'].str.extract(pat='F.1.3.1 Number of subjects for this age range: (.*)')
     df['trial_subject_Female'] = df['content'].str.extract(pat='F.2.1 Female: (.*)')
     df['trial_subject_male'] = df['content'].str.extract(pat='F.2.2 Male: (.*)')
     df['trial_subject_inMemberState'] = df['content'].str.extract(pat='F.4.1 In the member state: (.*)')
     df['trial_multinational'] = df['content'].str.extract(pat='F.4.2 For a multinational trial (.*)')
     df['trial_clinical'] = df['content'].str.extract(pat='F.4.2.2 In the whole clinical trial: (.*)')
+    df['valid_from'] = pd.to_datetime(directory,errors='ignore',format='%d-%m-%Y')
     df=df[['uid','summary_EudraCT_Number','trial_subject_Utero','trial_subject_Preterm','trial_subject_Newborns',
     'trial_subject_toddlers','trail_subject_Children',
-    'trail_subject_Adolescents','trail_subject_Adults','trail_subject_total_Adults','trail_subject_Elderly',
-    'trial_subject_Female','trial_subject_male','trial_subject_inMemberState','trial_multinational','trial_clinical']]
+    'trail_subject_Adolescents','trail_subject_Adults','trail_subject_Elderly',
+    'trial_subject_Female','trial_subject_male','trial_subject_inMemberState','trial_multinational','trial_clinical','valid_from','file_Name']]
     df=df.drop_duplicates()
     dbInstance.drop_table(f'"{schema_name}"."TRIAL_SUBJECT_INFO"')
+    df.columns = df.columns.str.lower()
     df.to_sql('TRIAL_SUBJECT_INFO', con, index = True, if_exists='append',schema=schema_name)
     return(df)
 
@@ -259,11 +271,11 @@ def run_staging_process(directory):
     ## Read from Ingestion Table
     df = pd.read_sql_table('load_txt',con,schema=schema_name)
     #build all the staging tables
-    # create_staging_sponsor(df,schema_name)
-    # create_staging_protocol(df,schema_name)
-    # create_staging_imp(df,schema_name)
+    create_staging_sponsor(df,schema_name,directory)
+    create_staging_protocol(df,schema_name,directory)
+    create_staging_imp(df,schema_name,directory)
     create_staging_trial(df,schema_name,directory)
-    # create_trial_subject(df,schema_name)
-    # create_trial_review(df,schema_name)
-    # create_staging_summary(df,schema_name)
-    # create_time_dimension(df,schema_name)
+    create_trial_subject(df,schema_name,directory)
+    create_trial_review(df,schema_name,directory)
+    create_staging_summary(df,schema_name,directory)
+    create_time_dimension(df,schema_name,directory)

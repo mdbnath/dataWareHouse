@@ -1,8 +1,11 @@
-CREATE OR REPLACE FUNCTION public.DIM_TRIAL_INFORMATION() RETURNS BOOLEAN AS $$	
+CREATE OR REPLACE FUNCTION public.DIM_TRIAL_INFORMATION(text) RETURNS BOOLEAN AS $$	
 declare 
 		o record;
+		in_clause ALIAS FOR $1;
 	begin		
-		-- For each 
+		raise notice 'inside function,%',in_clause;
+		--set search_path to in_clause;
+	    PERFORM public.set_search_path(in_clause||', public');
 		for o in
 		(
 			--Get all versions
