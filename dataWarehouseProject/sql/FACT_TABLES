@@ -1,0 +1,17 @@
+CREATE TABLE "dataWareHouse"."FACT_TRIAL_STUDIES" (
+	id int GENERATED ALWAYS AS IDENTITY primary KEY,
+	Trial_EudraCT_Number INTEGER NULL,
+	trial_info INTEGER NULL,
+	trial_subject_details INTEGER NULL,
+	dates INTEGER NULL,
+	trial_endpoint_result INTEGER NULL
+);
+
+CREATE TABLE "dataWareHouse"."FACT_SPONSOR_STUDIES" (
+	id int GENERATED ALWAYS AS IDENTITY primary KEY,
+	Trial_EudraCT_Number INTEGER NULL,
+	trial_info INTEGER NULL,
+	trial_sponsor INTEGER NULL,
+    dates INTEGER NULL
+);
+
