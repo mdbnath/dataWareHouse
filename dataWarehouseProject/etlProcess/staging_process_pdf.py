@@ -1,8 +1,11 @@
 import os, traceback
+from re import sub
 from typing import List, Dict, Optional
 import pdfquery
 import pandas as pd
 from lxml import etree
+from dataWarehouseProject import dbInstance
+con = dbInstance.getConnection(engine = True)
 
 def write_xml(pdf_file_path: str, target_file_path: Optional[str] = None) -> 'etree.ElementTree':
     __target_file_path = target_file_path or pdf_file_path.replace('.pdf', '.xml')
@@ -298,9 +301,9 @@ def parse_file(pdf_file_path: str) -> Dict[str, pd.DataFrame]:
     # If successful, delete log file if exists to avoid confusion
     return result
 
-def parse_directory(directory: Optional[str] = None) -> Dict[str, pd.DataFrame]:
+def parse_directory(directory: Optional[str] = None,subDir =None) -> Dict[str, pd.DataFrame]:
     # If directory not given, use current directory
-    directory = directory or os.getcwd()
+    directory = os.path.join(directory,subDir)    
 
     # Place holder variable for resulting list of dicts of dataframes
     # This list contains 1 dict per pdf file, each dict contains 1 entry per metric (key is the entry name, value is the dataframe)
@@ -317,23 +320,27 @@ def parse_directory(directory: Optional[str] = None) -> Dict[str, pd.DataFrame]:
         # Add filename pdf file name to result set
         for name in result.keys():
             if result[name] is None: continue
-            result[name]['filename'] = pdf_file
+            result[name]['file_name'] = pdf_file
         global_result.append(result)
 
-    return dict(
+    if not global_result:
+        return None
+        
+    result = dict(
         mortality_rate = pd.concat([result['mortality_rate'] for result in global_result if result['mortality_rate'] is not None]),
         icu_rate = pd.concat([result['icu_rate'] for result in global_result if result['icu_rate'] is not None]),
         ventilation_rate = pd.concat([result['ventilation_rate'] for result in global_result if result['ventilation_rate'] is not None]),
         global_info = pd.concat([result['global_info'] for result in global_result if result['global_info'] is not None]),
     )
+    staging_table = result['global_info']
+    staging_table = pd.merge(staging_table, result['mortality_rate'], on='file_name', how='left')
+    staging_table = pd.merge(staging_table, result['icu_rate'], on='file_name', how='left')
+    staging_table = pd.merge(staging_table, result['ventilation_rate'], on='file_name', how='left')
+    staging_table['valid_from'] =  pd.to_datetime(subDir,errors='ignore',format='%d-%m-%Y')
+    df=staging_table.drop_duplicates()
+    schema_name =f'staging_{subDir.replace("-", "_")}'
+    dbInstance.drop_table(f'"{schema_name}"."TRIAL_ENDPOINTS"')
+    df.columns = df.columns.str.lower()
+    df.to_sql('TRIAL_ENDPOINTS', con, index = True, if_exists='append',schema=schema_name)
 
-result = parse_directory("C:/Users/manja/OneDrive/Documents/Advanced Database/clinical_trials_dump/15-09-2021")
-
-result = parse_file('trial_res-07-13102021.pdf')
-
-pdf = pdfquery.PDFQuery('trial_res-02-13102021.pdf')
-pdf.load()
-
-write_xml('trial_res-06-13102021.pdf')
-
-
+    return df

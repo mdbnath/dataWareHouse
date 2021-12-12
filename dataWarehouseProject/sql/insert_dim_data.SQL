@@ -14,5 +14,6 @@ begin
     PERFORM public.DIM_TRIAL_REVIEW_INFO(in_clause);
     PERFORM public.DIM_TRIAL_SUBJECT_INFO(in_clause);
     PERFORM public.DIM_TRIAL_INFORMATION(in_clause);
+	PERFORM public.DIM_TRIAL_ENDPOINTS(in_clause);
 --end loop;
 end; $$

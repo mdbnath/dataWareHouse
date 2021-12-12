@@ -59,7 +59,7 @@ def process_pdf_staging(rootDirPdf):
         ##dbInstance.drop_table(f'"{schema_name}"."load_pdf"')
     # creating a pdf file object
         try:
-            staging_process_pdf.parse_directory(os.path.join(rootDirPdf, subDir))
+            staging_process_pdf.parse_directory(rootDirPdf, subDir)
         
         except FileNotFoundError:
             print('Could not find folder', os.path.join(rootDirPdf,subDir))
@@ -67,7 +67,7 @@ def process_pdf_staging(rootDirPdf):
     print('############################################ STAGING COMPLETED ############################### ')
     ##dimension.run_dim_tables(subDir) 
     
-#process_pdf_convert()
 process_pdf_staging(rootDir)
-#process_txt_staging(rootDir)
+
+##process_txt_staging(rootDir)
 
