@@ -55,9 +55,9 @@ def get_global_info(pdf: pdfquery.PDFQuery) -> pd.DataFrame:
         
         if len(result) == 4:
             df = pd.DataFrame([result])
-            
-            print(df.dtypes)
+            df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
             return df
+    
 
 def get_icu_rate(pdf: pdfquery.PDFQuery) -> pd.DataFrame:
     # Start with the line containing 'Secondary: Mortality' or Secondary blabla mortality (multiple formats and casings possible)
@@ -98,7 +98,11 @@ def get_icu_rate(pdf: pdfquery.PDFQuery) -> pd.DataFrame:
                 result['icu_placebo'] = temp.xpath("string()")
 
         if len(result) == 2:
-            return pd.DataFrame([result])
+            df = pd.DataFrame([result])            
+            df['icu_medicine'] = pd.to_numeric(df['icu_medicine'].str.split('(').str.get(0))
+            df['icu_placebo'] = pd.to_numeric(df['icu_placebo'].str.split('(').str.get(0))
+            df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
+            return df
 
 def get_mortality_rate(pdf: pdfquery.PDFQuery) -> pd.DataFrame:
     # Start with the line containing 'Secondary: Mortality' or Secondary blabla mortality (multiple formats and casings possible)
@@ -210,8 +214,15 @@ def get_mortality_rate(pdf: pdfquery.PDFQuery) -> pd.DataFrame:
 
         if len(result) == 4:
             found_values = True
-
-    return pd.DataFrame([result])
+            df = pd.DataFrame([result])
+            df['total_medicine'] = pd.to_numeric(df['total_medicine'].str.split('(').str.get(0))
+            df['total_placebo'] = pd.to_numeric(df['total_placebo'].str.split('(').str.get(0))
+            print(df['mortality_medicine'])
+            print(df['mortality_medicine'].str.split('(').str.get(0))
+            df['mortality_medicine'] = pd.to_numeric(df['mortality_medicine'].str.split('(').str.get(0))
+            df['mortality_placebo'] = pd.to_numeric(df['mortality_placebo'].str.split('(').str.get(0))
+            df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
+            return df
 
 def get_ventilation_rate(pdf: pdfquery.PDFQuery) -> pd.DataFrame:
     # Start with the line containing 'Secondary: Incidence of Mechanical Ventilation by Day 28'
@@ -253,7 +264,11 @@ def get_ventilation_rate(pdf: pdfquery.PDFQuery) -> pd.DataFrame:
 
         if len(result) == 2:
             found_values = True
-    return pd.DataFrame([result])
+            df = pd.DataFrame([result])
+            df['ventilation_medicine'] = pd.to_numeric(df['ventilation_medicine'].str.split('(').str.get(0))
+            df['ventilation_placebo'] = pd.to_numeric(df['ventilation_placebo'].str.split('(').str.get(0))
+            df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
+            return df
 
 def parse_file(pdf_file_path: str) -> Dict[str, pd.DataFrame]:
     log_file = pdf_file_path + '.log'

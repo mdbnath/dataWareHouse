@@ -15,14 +15,18 @@ CREATE OR REPLACE FUNCTION public.FACT_TRIAL_STUDIES() RETURNS BOOLEAN AS $$
 			e.icu_medicine,
 			e.icu_placebo ,
 			e.ventilation_medicine,
-			e.ventilation_placebo  from "dataWareHouse"."DIM_SUMMARY_INFORMATION" a 
+			e.ventilation_placebo,
+			f.id as protocol_info
+			from "dataWareHouse"."DIM_SUMMARY_INFORMATION" a 
 			left join "dataWareHouse"."DIM_TRIAL_INFORMATION" b on a.uid=b.uid
 			left join "dataWareHouse"."DIM_TRIAL_SUBJECT_INFO" c on a.uid=c.uid
 			left join "dataWareHouse"."DIM_TIMEDIMENSION_INFO" d on  a.uid=d.uid
 			left join "dataWareHouse"."DIM_TRIAL_ENDPOINTS" e on  TRIM(a.summary_eudract_number)=TRIM(e.eudract_number)
+			left join "dataWareHouse"."DIM_PROTOCOL_INFORMATION" f on  a.uid=f.uid
 			where b.valid_to is null and
 			c.valid_to is null and
-			d.valid_to is null)
+			d.valid_to is null and 
+			f.valid_to is null)
 		loop
 		insert into "dataWareHouse"."FACT_TRIAL_STUDIES"
 				(	
@@ -37,7 +41,8 @@ CREATE OR REPLACE FUNCTION public.FACT_TRIAL_STUDIES() RETURNS BOOLEAN AS $$
 					icu_medicine,
 					icu_placebo ,
 					ventilation_medicine,
-					ventilation_placebo
+					ventilation_placebo,
+					protocol_info
 									
 					) values(
 						o.summary_id,
@@ -51,7 +56,8 @@ CREATE OR REPLACE FUNCTION public.FACT_TRIAL_STUDIES() RETURNS BOOLEAN AS $$
 						o.icu_medicine,
 						o.icu_placebo ,
 						o.ventilation_medicine,
-						o.ventilation_placebo );
+						o.ventilation_placebo, 
+						o.protocol_info);
 		end loop;
 return true;
 end;

@@ -4,15 +4,16 @@ CREATE TABLE "dataWareHouse"."FACT_TRIAL_STUDIES" (
 	trial_info INTEGER NULL,
 	trial_subject_details INTEGER NULL,
 	dates INTEGER NULL,
-	total_medicine text NULL,	
-	mortality_medicine text NULL,
-	mortality_placebo text NULL,
-	total_placebo text NULL,
-	icu_medicine text NULL,
-	icu_placebo text NULL,
-	ventilation_medicine text NULL,
-	ventilation_placebo text NULL,
-	trial_review INTEGER NULL
+	total_medicine NUMERIC NULL,	
+	mortality_medicine NUMERIC NULL,
+	mortality_placebo NUMERIC NULL,
+	total_placebo NUMERIC NULL,
+	icu_medicine NUMERIC NULL,
+	icu_placebo NUMERIC NULL,
+	ventilation_medicine NUMERIC NULL,
+	ventilation_placebo NUMERIC NULL,
+	trial_review INTEGER NULL,
+	protocol_info INTEGER NULL
 );
 
 CREATE TABLE "dataWareHouse"."FACT_SPONSOR_STUDIES" (
