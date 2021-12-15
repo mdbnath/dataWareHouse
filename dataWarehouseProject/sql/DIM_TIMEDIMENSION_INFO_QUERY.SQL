@@ -10,15 +10,18 @@ declare
 		(
 			--Get all versions
 			select 
-					"uid",
-					summary_EudraCT_Number,
-					summary_trial_dateEntered,
-					trial_review_authority_date,
-					trail_review_ethics_date,
-					valid_from 
-					from "staging_15_09_2021"."TIME_DIMENSION"
+					tt."uid",
+					tt.summary_EudraCT_Number,
+					tt.summary_trial_dateEntered,
+					tt.trial_review_authority_date,
+					tt.trail_review_ethics_date,
+					tt.valid_from,
+					ee.trial_end_date,
+					ee.publication_date
+					from "TIME_DIMENSION" tt 
+					left join "TRIAL_ENDPOINTS" ee on TRIM(tt.summary_eudract_number) = TRIM(ee.eudract_Number)
 					order by "uid" asc, valid_from asc
-					-- Just up to here...
+				
 		)
 		loop
 			-- If there is no such version, insert a new one
@@ -36,6 +39,8 @@ declare
 					summary_trial_dateEntered,	
 					trial_review_authority_date,
 					trail_review_ethics_date,
+					trial_end_date,
+					publication_date,
 					valid_from,
 					valid_to
 					) values(
@@ -44,6 +49,8 @@ declare
 							o.summary_trial_dateEntered,	
 							o.trial_review_authority_date,
 							o.trail_review_ethics_date,
+							o.trial_end_date,
+							o.publication_date,
 							o.valid_from ,					
 							null );
 			end if;
@@ -61,6 +68,10 @@ comparison as (
 		lag(trial_review_authority_date) over w as prev_trial_review_authority_date,
 		trail_review_ethics_date,
 		lag(trail_review_ethics_date) over w as prev_trail_review_ethics_date,	
+		publication_date,
+		lag(publication_date) over w as prev_publication_date,
+		trial_end_date,
+		lag(trial_end_date) over w as prev_trial_end_date,	
 		valid_from,
 		lag(valid_from) over w as prev_valid_from
 	from "dataWareHouse"."DIM_TIMEDIMENSION_INFO"
@@ -73,7 +84,9 @@ versions_to_remove as (
 	where
 		summary_trial_dateEntered is not distinct from prev_summary_trial_dateEntered and
 		trial_review_authority_date is not distinct from prev_trial_review_authority_date AND
-		trail_review_ethics_date is not distinct from prev_trail_review_ethics_date 
+		trail_review_ethics_date is not distinct from prev_trail_review_ethics_date AND
+		trial_end_date is not distinct from prev_trial_end_date AND
+		publication_date is not distinct from prev_publication_date 
 		)
 
 --select count(*) from versions_to_remove

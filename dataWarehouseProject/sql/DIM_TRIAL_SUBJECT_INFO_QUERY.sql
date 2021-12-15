@@ -25,7 +25,7 @@ declare
 					trial_multinational,
 					trial_clinical,
 					valid_from 
-					from CONCAT(in_clause,"TRIAL_SUBJECT_INFO")
+					from "TRIAL_SUBJECT_INFO"
 					order by "uid" asc, valid_from asc
 					-- Just up to here...
 		)

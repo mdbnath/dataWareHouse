@@ -10,25 +10,25 @@ class Singleton(type):
             cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
         return cls._instances[cls]
 
-# class DatabaseInterface(metaclass=Singleton):
-#     def __init__(self) -> None:
-#         '''Interface for romes db'''
-#         self.host = 'ddcmstud.ugent.be'
-#         self.user = 'student16'
-#         self.password = 'rrxnkuefhm'
-#         self.dbname = 'student16'
-#         self.port='8081'
-#         self.connection={}
-
 class DatabaseInterface(metaclass=Singleton):
     def __init__(self) -> None:
         '''Interface for romes db'''
-        self.host = 'localhost'
-        self.user = 'postgres'
-        self.password = 'Mamanmaa21'
-        self.dbname = 'postgres'
+        self.host = 'ddcmstud.ugent.be'
+        self.user = 'student16'
+        self.password = 'rrxnkuefhm'
+        self.dbname = 'student16'
         self.port='8081'
         self.connection={}
+
+# class DatabaseInterface(metaclass=Singleton):
+#     def __init__(self) -> None:
+#         '''Interface for romes db'''
+#         self.host = 'localhost'
+#         self.user = 'postgres'
+#         self.password = 'Mamanmaa21'
+#         self.dbname = 'postgres'
+#         self.port='8081'
+#         self.connection={}
 
     def getConnection(self, engine = False):
         '''Returns connection object
@@ -55,15 +55,28 @@ class DatabaseInterface(metaclass=Singleton):
     def drop_table(self,tableName):
         con = self.getConnection()
         cur = con.cursor()
-        print('######## I am in databse.py #####' +tableName)
-        cur.execute('drop table if exists '+tableName)
-        con.commit()
-        cur.close()       
+        try:
+            print('######## I am in databse.py #####' +tableName)
+            cur.execute('drop table if exists '+tableName)
+            con.commit()
+        finally:
+            cur.close()       
 
     def run_procedure(self,procedureName, *args):
         con = self.getConnection()
         cur = con.cursor()
-        print(f'CALL {procedureName}({",".join(["%s"]*len(args))})', args)
-        cur.execute(f'CALL {procedureName}({",".join(["%s"]*len(args))})', args)
-        con.commit()
-        cur.close()       
+        try:
+            print(f'CALL {procedureName}({",".join(["%s"]*len(args))})', args)
+            cur.execute(f'CALL {procedureName}({",".join(["%s"]*len(args))})', args)
+            con.commit()
+        finally:
+            cur.close()       
+
+    def run_statement(self,statement, *args):
+        con = self.getConnection()
+        cur = con.cursor()
+        try:
+            cur.execute(statement,args)
+            con.commit()
+        finally:
+            cur.close()       

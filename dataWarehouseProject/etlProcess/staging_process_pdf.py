@@ -4,6 +4,7 @@ from typing import List, Dict, Optional
 import pdfquery
 import pandas as pd
 from lxml import etree
+import datetime
 from dataWarehouseProject import dbInstance
 con = dbInstance.getConnection(engine = True)
 
@@ -42,13 +43,21 @@ def get_global_info(pdf: pdfquery.PDFQuery) -> pd.DataFrame:
             result['eudract_number'] = temp.xpath("string()")
         elif temp.attrib['y0'] == result_trial_protocol_idx and temp.attrib['x0'] != column_idx:
             result['trial_protocol'] = temp.xpath("string()")
+            print(type(temp.xpath("string()")))
         elif temp.attrib['y0'] == result_trial_end_date_idx and temp.attrib['x0'] != column_idx:
-            result['trial_end_date'] = temp.xpath("string()")
+            print(type(str(temp.xpath("string()"))))
+            print(str(temp.xpath("string()")))
+            result['trial_end_date'] = datetime.datetime.strptime(str(temp.xpath("string()")).strip(),'%d %B %Y')
+
         elif temp.attrib['y0'] == publication_date_idx and temp.attrib['x0'] != column_idx:
-            result['publication_date'] = temp.xpath("string()")
+            result['publication_date'] = datetime.datetime.strptime(str(temp.xpath("string()")).strip(),'%d %B %Y')
+          
         
         if len(result) == 4:
-            return pd.DataFrame([result])
+            df = pd.DataFrame([result])
+            
+            print(df.dtypes)
+            return df
 
 def get_icu_rate(pdf: pdfquery.PDFQuery) -> pd.DataFrame:
     # Start with the line containing 'Secondary: Mortality' or Secondary blabla mortality (multiple formats and casings possible)
@@ -314,7 +323,7 @@ def parse_directory(directory: Optional[str] = None,subDir =None) -> Dict[str, p
 
         # Skip if failed
         if not result: 
-            print(f'no result for {pdf_file}')
+            print(f'no result for {pdf_file}')            
             continue
 
         # Add filename pdf file name to result set
@@ -324,6 +333,25 @@ def parse_directory(directory: Optional[str] = None,subDir =None) -> Dict[str, p
         global_result.append(result)
 
     if not global_result:
+        schema_name =f'staging_{subDir.replace("-", "_")}'
+        statement = f'''CREATE TABLE if not exists {schema_name}."TRIAL_ENDPOINTS" (
+            "index" int8 NULL,
+            eudract_number text NULL,
+            trial_protocol text NULL,
+            trial_end_date timestamp NULL,
+            publication_date timestamp NULL,
+            file_name text NULL,
+            total_medicine text NULL,
+            total_placebo text NULL,
+            mortality_medicine text NULL,
+            mortality_placebo text NULL,
+            icu_medicine text NULL,
+            icu_placebo text NULL,
+            ventilation_medicine text NULL,
+            ventilation_placebo text NULL,
+            valid_from timestamp NULL
+        )'''
+        dbInstance.run_statement(statement)
         return None
         
     result = dict(
@@ -342,5 +370,4 @@ def parse_directory(directory: Optional[str] = None,subDir =None) -> Dict[str, p
     dbInstance.drop_table(f'"{schema_name}"."TRIAL_ENDPOINTS"')
     df.columns = df.columns.str.lower()
     df.to_sql('TRIAL_ENDPOINTS', con, index = True, if_exists='append',schema=schema_name)
-
     return df

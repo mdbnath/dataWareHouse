@@ -13,8 +13,6 @@ declare
 					
 					eudract_number,
 					trial_protocol,	
-					trial_end_date,
-					publication_date,
 					total_medicine,
 					total_placebo,
 					mortality_medicine,
@@ -24,7 +22,7 @@ declare
 					ventilation_medicine,
 					ventilation_placebo,
 					valid_from 
-					from "TRAIL_ENDPOINTS"
+					from "TRIAL_ENDPOINTS"
 					order by eudract_number asc, valid_from asc
 					-- Just up to here...
 		)
@@ -33,16 +31,14 @@ declare
 			-- Important: for the between to work, need to cast timestamp into date!
 			if not exists (
 					select eudract_number
-					from "dataWareHouse"."DIM_TRAIL_ENDPOINTS" dim
+					from "dataWareHouse"."DIM_TRIAL_ENDPOINTS" dim
 					where
 					o.valid_from::date between dim.valid_from and dim.valid_to)
 			then
-				insert into "dataWareHouse"."DIM_TRAIL_ENDPOINTS"
+				insert into "dataWareHouse"."DIM_TRIAL_ENDPOINTS"
 				(	
 					eudract_number,
 					trial_protocol,	
-					trial_end_date,
-					publication_date,
 					total_medicine,
 					total_placebo,
 					mortality_medicine,
@@ -56,8 +52,6 @@ declare
 					) values(
 							o.eudract_number,
 							o.trial_protocol,	
-							o.trial_end_date,
-							o.publication_date,
 							o.total_medicine,
 							o.total_placebo,
 							o.mortality_medicine,
@@ -79,10 +73,6 @@ comparison as (
 	    eudract_number,
 		trial_protocol,
 		lag(trial_protocol) over w as prev_trial_protocol,
-		trial_end_date,
-		lag(trial_end_date) over w as prev_trial_end_date,
-		publication_date,
-		lag(publication_date) over w as prev_publication_date,
 		total_medicine,
 		lag(total_medicine) over w as prev_total_medicine,	
 		total_placebo,
@@ -101,7 +91,7 @@ comparison as (
 		lag(ventilation_placebo) over w as prev_ventilation_placebo,			
 		valid_from,
 		lag(valid_from) over w as prev_valid_from
-	from "dataWareHouse"."DIM_TRAIL_ENDPOINTS"
+	from "dataWareHouse"."DIM_TRIAL_ENDPOINTS"
 	window w as (partition by eudract_number order by valid_from)
 ),
 -- Mark them as removable if they are the same on the SCD type II attributes
@@ -110,8 +100,6 @@ versions_to_remove as (
 	from comparison
 	where
 		trial_protocol is not distinct from prev_trial_protocol and
-		trial_end_date is not distinct from prev_trial_end_date AND
-		publication_date is not distinct from prev_publication_date AND		
 		total_medicine is not distinct from prev_total_medicine and
 		total_placebo is not distinct from prev_total_placebo and
 		mortality_medicine is not distinct from prev_mortality_medicine AND
@@ -124,20 +112,20 @@ versions_to_remove as (
 
 --select count(*) from versions_to_remove
 -- Effectively delete them
-delete from "dataWareHouse"."DIM_TRAIL_ENDPOINTS"
+delete from "dataWareHouse"."DIM_TRIAL_ENDPOINTS"
 where (eudract_number,valid_from) in
 (select * from versions_to_remove);
 
 --Set version_ends
 --Set version_ends
-update "dataWareHouse"."DIM_TRAIL_ENDPOINTS" dd
+update "dataWareHouse"."DIM_TRIAL_ENDPOINTS" dd
 set valid_to = d.valid_to
  from
 	(select
 		eudract_number,
 		valid_from,
 		lead(valid_from) over natural_key_partition as valid_to
-	 from "dataWareHouse"."DIM_TRAIL_ENDPOINTS"
+	 from "dataWareHouse"."DIM_TRIAL_ENDPOINTS"
 	 window natural_key_partition as
 		(partition by eudract_number order by valid_from)
 	 order by eudract_number, valid_from asc) d
